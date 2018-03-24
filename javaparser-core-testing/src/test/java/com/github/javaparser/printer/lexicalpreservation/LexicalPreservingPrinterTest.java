@@ -1055,4 +1055,41 @@ public class LexicalPreservingPrinterTest extends AbstractLexicalPreservingTest 
         LexicalPreservingPrinter.setup(cu);
         cu.accept(new CallModifierVisitor(), null);
     }
+
+    @Test
+    public void invokeModifierVisitorEnum() {
+        String code = "enum A {" + EOL +
+                "   A1(1)," + EOL +
+                "   A2(2)," + EOL +
+                "   A3(3);" + EOL +
+                "   A(int i) {" + EOL +
+                "   }" + EOL +
+                "}";
+
+        CompilationUnit cu = JavaParser.parse(code);
+        LexicalPreservingPrinter.setup(cu);
+        cu.accept(new EnumAdderVisitor(), null);
+        assertEqualsNoEol("enum A {\n" +
+                "   A1(1),\n" +
+                "   A2(2),\n" +
+                "   A3(3),\n" +
+                "   A4(4);\n" +
+                "   A(int i) {\n" +
+                "   }\n" +
+                "}", LexicalPreservingPrinter.print(cu));
+    }
+
+    private class EnumAdderVisitor extends ModifierVisitor<Void> {
+        @Override
+        public Visitable visit(EnumDeclaration n, Void arg) {
+            SimpleName a7 = new SimpleName("A4");
+            IntegerLiteralExpr expr = new IntegerLiteralExpr(4);
+            NodeList<AnnotationExpr> annotations = NodeList.nodeList();
+            NodeList<Expression> arguments = NodeList.nodeList(expr);
+            NodeList<BodyDeclaration<?>> body = NodeList.nodeList();
+            EnumConstantDeclaration constantDeclaration = new EnumConstantDeclaration(annotations, a7, arguments, body);
+            n.addEntry(constantDeclaration);
+            return n;
+        }
+    }
 }
